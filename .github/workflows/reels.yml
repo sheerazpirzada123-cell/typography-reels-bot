@@ -2,7 +2,7 @@ name: Daily Typography Reel Automation
 
 on:
   schedule:
-    - cron: '0 6 * * *' # Rozana subah 11:00 AM (PKT)
+    - cron: '0 14 * * *' # Rozana shaam 7:00 PM (PKT) / 2:00 PM (UTC)
   workflow_dispatch:
 
 jobs:
