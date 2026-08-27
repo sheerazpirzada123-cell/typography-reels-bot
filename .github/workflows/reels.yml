@@ -2,7 +2,7 @@ name: Daily Typography Reel Automation
 
 on:
   schedule:
-    - cron: '0 6 * * *' # Roz subah 11:00 AM (PKT)
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,10 @@ jobs:
           python-version: '3.10'
 
       - name: Install System Dependencies
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick ffmpeg
+          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
       - name: Install Python Libraries
         run: pip install -r requirements.txt
