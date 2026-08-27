@@ -7,7 +7,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 def upload_to_youtube(video_path, title, description):
-    # GitHub Secrets se variables fetch karna
     client_id = os.environ.get("YOUTUBE_CLIENT_ID")
     client_secret = os.environ.get("YOUTUBE_CLIENT_SECRET")
     refresh_token = os.environ.get("YOUTUBE_REFRESH_TOKEN")
@@ -28,22 +27,16 @@ def upload_to_youtube(video_path, title, description):
             "title": title,
             "description": description,
             "tags": ["Shorts", "Motivation", "Quotes", "Typography"],
-            "categoryId": "22"  # People & Blogs
+            "categoryId": "22"
         },
         "status": {
-            "privacyStatus": "public",  # Direct public post
+            "privacyStatus": "public",
             "selfDeclaredMadeForKids": False
         }
     }
 
     media = MediaFileUpload(video_path, chunksize=-1, resumable=True)
-
-    request = youtube.videos().insert(
-        part="snippet,status",
-        body=body,
-        media_body=media
-    )
-
+    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
     response = request.execute()
     print(f"Video uploaded successfully! Video ID: {response['id']}")
 
@@ -72,7 +65,6 @@ def generate_typography_video():
     output_video = "final_reel.mp4"
     video.write_videofile(output_video, fps=24, codec='libx264', audio_codec='aac')
 
-    # Upload to YouTube Shorts
     upload_to_youtube(
         video_path=output_video,
         title=f"{text[:50]} #Shorts #Motivation",
