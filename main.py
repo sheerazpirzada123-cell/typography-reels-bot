@@ -1,7 +1,7 @@
 import os
 import random
 from gtts import gTTS
-from moviepy import TextClip, AudioFileClip
+from moviepy.editor import TextClip, AudioFileClip
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -50,6 +50,7 @@ def generate_typography_video():
     text = random.choice(quotes)
     print(f"Selected Quote: {text}")
 
+    # Voiceover Generation
     tts = gTTS(text=text, lang='en', slow=False)
     audio_path = "voiceover.mp3"
     tts.save(audio_path)
@@ -57,7 +58,8 @@ def generate_typography_video():
     audio_clip = AudioFileClip(audio_path)
     duration = audio_clip.duration
 
-    txt_clip = TextClip(text, fontsize=70, color='white', font='Arial-Bold', 
+    # Video Clip Generation
+    txt_clip = TextClip(text, fontsize=60, color='white', font='DejaVu-Sans-Bold', 
                         size=(1080, 1920), method='caption', align='center')
     txt_clip = txt_clip.set_duration(duration)
 
@@ -65,6 +67,7 @@ def generate_typography_video():
     output_video = "final_reel.mp4"
     video.write_videofile(output_video, fps=24, codec='libx264', audio_codec='aac')
 
+    # Upload Process
     upload_to_youtube(
         video_path=output_video,
         title=f"{text[:50]} #Shorts #Motivation",
