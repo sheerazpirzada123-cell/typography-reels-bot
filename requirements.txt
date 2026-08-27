@@ -4,3 +4,4 @@ gTTS
 google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
+decorator<5.0.0
