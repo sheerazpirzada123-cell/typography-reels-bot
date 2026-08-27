@@ -17,11 +17,13 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install System Dependencies
+      - name: Install System Dependencies & Fix ImageMagick Policy
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick ffmpeg
-          sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
+          # Remove ImageMagick security restriction completely
+          sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*" \/>/<policy domain="path" rights="read|write" pattern="@\*" \/>/g' /etc/ImageMagick-6/policy.xml
+          sudo sed -i 's/rights="none"/rights="read|write"/g' /etc/ImageMagick-6/policy.xml
 
       - name: Install Python Libraries
         run: pip install -r requirements.txt
