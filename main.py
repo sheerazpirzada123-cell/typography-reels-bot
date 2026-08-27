@@ -1,7 +1,14 @@
 import os
 import random
 import requests
-from moviepy.editor import TextClip, AudioFileClip, VideoFileClip, CompositeVideoClip
+from moviepy.editor import (
+    TextClip, 
+    AudioFileClip, 
+    VideoFileClip, 
+    CompositeVideoClip, 
+    CompositeAudioClip
+)
+from moviepy.audio.fx.all import volumex
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -47,6 +54,14 @@ def download_background_video():
         f.write(r.content)
     return "bg.mp4"
 
+def download_bg_music():
+    # Direct link to a cinematic/mysterious background music track
+    music_url = "https://assets.mixkit.co/music/preview/mixkit-mysterious-bass-pulse-2298.mp3"
+    r = requests.get(music_url)
+    with open("bg_music.mp3", "wb") as f:
+        f.write(r.content)
+    return "bg_music.mp3"
+
 def upload_to_youtube(video_path, title, description):
     client_id = os.environ.get("YOUTUBE_CLIENT_ID")
     client_secret = os.environ.get("YOUTUBE_CLIENT_SECRET")
@@ -82,7 +97,6 @@ def upload_to_youtube(video_path, title, description):
     print(f"Video uploaded successfully! Video ID: {response['id']}")
 
 def generate_typography_video():
-    # Short & High-Impact Scripts (~250 Characters for 20-25 sec videos)
     scripts = [
         "Kya aapko pata hai ki hum raat ko jo taare dekhte hain, wo shayad kab ke khatam ho chuke hain? Unki roshni ko zameen tak pahunchne mein lakho saal lagte hain. Aap aasmaan mein past dekh rahe hote hain. Think about it.",
         "Psychology kehti hai ki agar aap kisi ke baare mein bina waja soch rahe hain, toh 80 percent chance hai ki wo insan bhi aapke baare mein soch raha hai. Humara mind connected hota hai.",
@@ -92,12 +106,21 @@ def generate_typography_video():
     script_text = random.choice(scripts)
     print(f"Selected Script Length: {len(script_text)} characters")
 
-    # Generate Realistic Voice
+    # 1. Voiceover
     audio_path = generate_elevenlabs_audio(script_text)
-    audio_clip = AudioFileClip(audio_path)
-    duration = audio_clip.duration
+    voice_clip = AudioFileClip(audio_path)
+    duration = voice_clip.duration
 
-    # Download & Adjust BG Video
+    # 2. Background Music
+    music_path = download_bg_music()
+    music_clip = AudioFileClip(music_path).subclip(0, duration)
+    # Background music ka volume low rakha hai (15%) taakay voiceover saaf sunai dey
+    music_clip = volumex(music_clip, 0.15) 
+
+    # Combine Voiceover + Music
+    final_audio = CompositeAudioClip([voice_clip, music_clip])
+
+    # 3. BG Video
     bg_video_path = download_background_video()
     bg_clip = VideoFileClip(bg_video_path)
     
@@ -108,7 +131,7 @@ def generate_typography_video():
         
     bg_clip = bg_clip.resize(newsize=(1080, 1920))
 
-    # Styled Text Overlay
+    # 4. Typography Text
     txt_clip = TextClip(
         script_text, 
         fontsize=52, 
@@ -121,9 +144,9 @@ def generate_typography_video():
         align='center'
     ).set_duration(duration).set_position('center')
 
-    # Merge Video + Audio
+    # Merge Video + Text + Multi-track Audio
     final_video = CompositeVideoClip([bg_clip, txt_clip])
-    final_video = final_video.set_audio(audio_clip)
+    final_video = final_video.set_audio(final_audio)
 
     output_video = "final_reel.mp4"
     final_video.write_videofile(output_video, fps=24, codec='libx264', audio_codec='aac')
