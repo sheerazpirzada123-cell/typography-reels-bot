@@ -2,7 +2,7 @@ name: Daily Typography Reel Automation
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 6 * * *' # Rozana subah 11:00 AM (PKT)
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick ffmpeg
-          # Remove ImageMagick security restriction completely
           sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*" \/>/<policy domain="path" rights="read|write" pattern="@\*" \/>/g' /etc/ImageMagick-6/policy.xml
           sudo sed -i 's/rights="none"/rights="read|write"/g' /etc/ImageMagick-6/policy.xml
 
@@ -33,4 +32,5 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: python main.py
