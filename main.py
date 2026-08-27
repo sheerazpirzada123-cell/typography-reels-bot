@@ -4,7 +4,7 @@ import requests
 from moviepy.editor import (
     TextClip, 
     AudioFileClip, 
-    VideoFileClip, 
+    ColorClip, 
     CompositeVideoClip, 
     CompositeAudioClip
 )
@@ -42,29 +42,14 @@ def generate_elevenlabs_audio(text, output_filename="voiceover.mp3"):
     else:
         raise Exception(f"ElevenLabs API Error: {response.text}")
 
-def download_background_video():
-    # Direct 100% Working High Quality Video CDN URLs
-    video_urls = [
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
-    ]
-    url = random.choice(video_urls)
-    r = requests.get(url, stream=True)
-    with open("bg.mp4", "wb") as f:
-        for chunk in r.iter_content(chunk_size=1024*1024):
-            if chunk:
-                f.write(chunk)
-    return "bg.mp4"
-
 def download_bg_music():
-    # Direct Working MP3 Audio Link
-    music_url = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-documentary-115669.mp3"
+    # Direct Working MP3 Audio Link from Wikimedia
+    music_url = "https://upload.wikimedia.org/wikipedia/commons/3/34/Soundtrack_Cinema_Theme.ogg"
     headers = {'User-Agent': 'Mozilla/5.0'}
     r = requests.get(music_url, headers=headers)
-    with open("bg_music.mp3", "wb") as f:
+    with open("bg_music.ogg", "wb") as f:
         f.write(r.content)
-    return "bg_music.mp3"
+    return "bg_music.ogg"
 
 def upload_to_youtube(video_path, title, description):
     client_id = os.environ.get("YOUTUBE_CLIENT_ID")
@@ -110,44 +95,38 @@ def generate_typography_video():
     script_text = random.choice(scripts)
     print(f"Selected Script Length: {len(script_text)} characters")
 
-    # 1. Voiceover Generation
+    # 1. Voiceover
     audio_path = generate_elevenlabs_audio(script_text)
     voice_clip = AudioFileClip(audio_path)
     duration = voice_clip.duration
 
     # 2. Background Music
-    music_path = download_bg_music()
-    music_clip = AudioFileClip(music_path).subclip(0, duration)
-    music_clip = volumex(music_clip, 0.12) 
+    try:
+        music_path = download_bg_music()
+        music_clip = AudioFileClip(music_path).subclip(0, duration)
+        music_clip = volumex(music_clip, 0.12)
+        final_audio = CompositeAudioClip([voice_clip, music_clip])
+    except Exception as e:
+        print(f"Music download failed, proceeding with voice only: {e}")
+        final_audio = voice_clip
 
-    # Combine Voiceover + Music
-    final_audio = CompositeAudioClip([voice_clip, music_clip])
-
-    # 3. BG Video
-    bg_video_path = download_background_video()
-    bg_clip = VideoFileClip(bg_video_path)
-    
-    if bg_clip.duration < duration:
-        bg_clip = bg_clip.loop(duration=duration)
-    else:
-        bg_clip = bg_clip.subclip(0, duration)
-        
-    bg_clip = bg_clip.resize(newsize=(1080, 1920))
+    # 3. Solid Dark Background (Aesthetic Dark Theme)
+    bg_clip = ColorClip(size=(1080, 1920), color=(15, 15, 20), duration=duration)
 
     # 4. Typography Text Overlay
     txt_clip = TextClip(
         script_text, 
-        fontsize=52, 
+        fontsize=55, 
         color='#FFD700', 
         font='DejaVu-Sans-Bold', 
         stroke_color='black',
-        stroke_width=3,
-        size=(920, 1500), 
+        stroke_width=2,
+        size=(900, 1600), 
         method='caption', 
         align='center'
     ).set_duration(duration).set_position('center')
 
-    # Merge All Elements
+    # Merge All
     final_video = CompositeVideoClip([bg_clip, txt_clip])
     final_video = final_video.set_audio(final_audio)
 
