@@ -49,15 +49,16 @@ def download_background_video():
         "https://assets.mixkit.co/videos/preview/mixkit-time-lapse-of-clouds-over-a-mountain-range-4286-large.mp4"
     ]
     url = random.choice(video_urls)
-    r = requests.get(url)
+    r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
     with open("bg.mp4", "wb") as f:
         f.write(r.content)
     return "bg.mp4"
 
 def download_bg_music():
-    # Direct link to a cinematic/mysterious background music track
-    music_url = "https://assets.mixkit.co/music/preview/mixkit-mysterious-bass-pulse-2298.mp3"
-    r = requests.get(music_url)
+    # Direct reliable working audio file link
+    music_url = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-documentary-115669.mp3"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    r = requests.get(music_url, headers=headers)
     with open("bg_music.mp3", "wb") as f:
         f.write(r.content)
     return "bg_music.mp3"
@@ -114,8 +115,7 @@ def generate_typography_video():
     # 2. Background Music
     music_path = download_bg_music()
     music_clip = AudioFileClip(music_path).subclip(0, duration)
-    # Background music ka volume low rakha hai (15%) taakay voiceover saaf sunai dey
-    music_clip = volumex(music_clip, 0.15) 
+    music_clip = volumex(music_clip, 0.12) 
 
     # Combine Voiceover + Music
     final_audio = CompositeAudioClip([voice_clip, music_clip])
