@@ -43,19 +43,22 @@ def generate_elevenlabs_audio(text, output_filename="voiceover.mp3"):
         raise Exception(f"ElevenLabs API Error: {response.text}")
 
 def download_background_video():
+    # Direct 100% Working High Quality Video CDN URLs
     video_urls = [
-        "https://assets.mixkit.co/videos/preview/mixkit-starry-night-sky-4128-large.mp4",
-        "https://assets.mixkit.co/videos/preview/mixkit-deep-space-with-stars-and-nebula-41544-large.mp4",
-        "https://assets.mixkit.co/videos/preview/mixkit-time-lapse-of-clouds-over-a-mountain-range-4286-large.mp4"
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
     ]
     url = random.choice(video_urls)
-    r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+    r = requests.get(url, stream=True)
     with open("bg.mp4", "wb") as f:
-        f.write(r.content)
+        for chunk in r.iter_content(chunk_size=1024*1024):
+            if chunk:
+                f.write(chunk)
     return "bg.mp4"
 
 def download_bg_music():
-    # Direct reliable working audio file link
+    # Direct Working MP3 Audio Link
     music_url = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cinematic-documentary-115669.mp3"
     headers = {'User-Agent': 'Mozilla/5.0'}
     r = requests.get(music_url, headers=headers)
@@ -107,7 +110,7 @@ def generate_typography_video():
     script_text = random.choice(scripts)
     print(f"Selected Script Length: {len(script_text)} characters")
 
-    # 1. Voiceover
+    # 1. Voiceover Generation
     audio_path = generate_elevenlabs_audio(script_text)
     voice_clip = AudioFileClip(audio_path)
     duration = voice_clip.duration
@@ -131,7 +134,7 @@ def generate_typography_video():
         
     bg_clip = bg_clip.resize(newsize=(1080, 1920))
 
-    # 4. Typography Text
+    # 4. Typography Text Overlay
     txt_clip = TextClip(
         script_text, 
         fontsize=52, 
@@ -144,7 +147,7 @@ def generate_typography_video():
         align='center'
     ).set_duration(duration).set_position('center')
 
-    # Merge Video + Text + Multi-track Audio
+    # Merge All Elements
     final_video = CompositeVideoClip([bg_clip, txt_clip])
     final_video = final_video.set_audio(final_audio)
 
